@@ -1,48 +1,64 @@
 """
-Database Schemas
-
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Life Moves App - Database Schemas
 """
-
-from pydantic import BaseModel, Field
-from typing import Optional
-
-# Example schemas (replace with your own):
+from pydantic import BaseModel, Field, EmailStr
+from typing import Optional, List, Literal
+from datetime import datetime
 
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    name: str
+    email: EmailStr
+    password_hash: str
+    plan: Literal["free", "pro"] = "free"
+    preferences: Optional[dict] = Field(default_factory=dict)
+    streak: int = 0
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class ContentItem(BaseModel):
+    title: str
+    description: Optional[str] = None
+    category: Literal["art", "movement", "mindfulness"] = "mindfulness"
+    tags: List[str] = Field(default_factory=list)
+    tier: Literal["free", "pro"] = "free"
+    duration_minutes: Optional[int] = None
+    media_url: Optional[str] = None
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Task(BaseModel):
+    user_id: str
+    week: str
+    task_type: str
+    notes: Optional[str] = None
+    completed: bool = True
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Checkin(BaseModel):
+    user_id: str
+    mood: Literal["great", "good", "ok", "low"] = "ok"
+    note: Optional[str] = None
+    date: datetime = Field(default_factory=datetime.utcnow)
+
+class Squad(BaseModel):
+    name: str
+    description: Optional[str] = None
+    owner_id: str
+    members: List[str] = Field(default_factory=list)
+
+class Post(BaseModel):
+    user_id: str
+    squad_id: Optional[str] = None
+    text: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Program(BaseModel):
+    title: str
+    description: Optional[str] = None
+    weeks: int = 4
+    tier: Literal["free", "pro"] = "free"
+
+class Enrollment(BaseModel):
+    user_id: str
+    program_id: str
+    progress_week: int = 0
+
+class Feedback(BaseModel):
+    user_id: Optional[str] = None
+    message: str
+    rating: Optional[int] = Field(None, ge=1, le=5)
